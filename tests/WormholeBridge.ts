@@ -11,7 +11,7 @@ describe("WormholeBridge", function () {
   let contract: any;
   let usdc: any;
   beforeEach(async () => {
-    contract = await hre.ethers.getContractAt("WormholeBridge", process.env.WORMHOLE_ETH_BRIDGE_ADDRESS!);
+    contract = await hre.ethers.getContractAt("WormholeBridge", process.env.WORMHOLE_ARB_BRIDGE_ADDRESS!);
     usdc = await hre.ethers.getContractAt("IERC20", process.env.USDC_ADDRESS!);
   })
 
@@ -40,57 +40,47 @@ describe("WormholeBridge", function () {
     const chain = wh.getChain('Solana');
     console.log(chain.config.chainId);
 
-    let [msgId] = await chain.parseTransaction('5RGcTecUBDQUa18Q2b1yRZYamYYhswwP4Fb93rn933Yu9mHFyikLKk94mjUfghycuAAEHipYiCoBXkm4MPYFDkLF');
+    let [msgId] = await chain.parseTransaction('4azfuuo8RVrxzJLDfS5xpfK2vYBAk6c3uPuTmYUoBMqTvdMsaBX2cS5UGKKXNbs2xEonYnspxTMwBF2eXcftcsDb');
     let VM = await wh.getVaa(msgId, 'TokenBridge:TransferWithPayload', 1000000);
     const tx = await contract.registerSender(chain.config.chainId, VM!.emitterAddress.toUint8Array());
     await tx.wait();
     console.log(tx);
   })
 
-  it("Should decode VAA", async () => {
-    const wh = await wormhole('Testnet', [evm, solana]);
-    const chain = wh.getChain('Solana');
-    console.log(chain.config.chainId);
+  // it("Should create vaa and receive message", async () => {
+  //   const timestamp = Math.floor(Date.now() / 1000);
+  //   const emitterAddress = new UniversalAddress(ZeroAddress, 'hex');
+  //   let receiverArr = new Uint8Array(32);
+  //   receiverArr.set(Buffer.from(String(process.env.WORMHOLE_BASE_BRIDGE_ADDRESS!).slice(2), 'hex'), 0);
 
-    let [msgId] = await chain.parseTransaction('5PLUuBpoehUVuH3iPYf73F6EArGLPxss4uQu3Y7kY1vVCB11TEvQ6kfS5uvsXbHMfLr9VgQY829nzkWCgFGj9VSn');
-    let VM = await wh.getVaa(msgId, 'TokenBridge:TransferWithPayload', 60000);
-    console.log(VM?.payload.token.address.toUint8Array());
-  })
+  //   const type = ["address", "address", "uint256", "uint16", "bytes32"];
+  //   const value = ["0xc0489CE75b6C23E664F0Bf27E5677A353796cE38", process.env.USDC_ADDRESS!, 10, 10004, receiverArr]
+  //   const payload = Buffer.from(AbiCoder.defaultAbiCoder().encode(type, value).slice(2), 'hex');
+  //   const vaaBytes = serialize(createVAA('Uint8Array', {
+  //     guardianSet: 0,
+  //     timestamp: timestamp,
+  //     nonce: 0,
+  //     emitterChain: "Solana",
+  //     emitterAddress: emitterAddress,
+  //     sequence: 0n,
+  //     consistencyLevel: 0,
+  //     signatures: [],
+  //     payload: payload
+  //   }));
 
-  it("Should claim token", async () => {
-    const timestamp = Math.floor(Date.now() / 1000);
-    const emitterAddress = new UniversalAddress(ZeroAddress, 'hex');
-    let receiverArr = new Uint8Array(32);
-    receiverArr.set(Buffer.from(String(process.env.WORMHOLE_BASE_BRIDGE_ADDRESS!).slice(2), 'hex'), 0);
-
-    const type = ["address", "address", "uint256", "uint16", "bytes32"];
-    const value = ["0xc0489CE75b6C23E664F0Bf27E5677A353796cE38", process.env.USDC_ADDRESS!, 10, 10004, receiverArr]
-    const payload = Buffer.from(AbiCoder.defaultAbiCoder().encode(type, value).slice(2), 'hex');
-    const vaaBytes = serialize(createVAA('Uint8Array', {
-      guardianSet: 0,
-      timestamp: timestamp,
-      nonce: 0,
-      emitterChain: "Solana",
-      emitterAddress: emitterAddress,
-      sequence: 0n,
-      consistencyLevel: 0,
-      signatures: [],
-      payload: payload
-    }));
-
-    let tx = await contract.receiveMessage(vaaBytes, {gasLimit: 2e7});
-    await tx.wait();
-    console.log(tx);
-  })
+  //   let tx = await contract.receiveMessage(vaaBytes, {gasLimit: 2e7});
+  //   await tx.wait();
+  //   console.log(tx);
+  // })
 
   it("Should claim token by vaa", async () => {
     const wh = await wormhole('Testnet', [evm, solana]);
     const chain = wh.getChain('Solana');
     console.log(chain.config.chainId);
 
-    let [msgId] = await chain.parseTransaction('5RGcTecUBDQUa18Q2b1yRZYamYYhswwP4Fb93rn933Yu9mHFyikLKk94mjUfghycuAAEHipYiCoBXkm4MPYFDkLF');
+    let [msgId] = await chain.parseTransaction('4azfuuo8RVrxzJLDfS5xpfK2vYBAk6c3uPuTmYUoBMqTvdMsaBX2cS5UGKKXNbs2xEonYnspxTMwBF2eXcftcsDb');
     let vaaBytes = await wh.getVaaBytes(msgId, 2592000);
-    let tx = await contract.redeemTransferWithPayload(vaaBytes, {gasLimit: 2e7});
+    let tx = await contract.redeemTransferWithPayload(vaaBytes, {gasLimit: 1e6});
     await tx.wait();
     console.log(tx);
   })
