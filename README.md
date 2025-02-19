@@ -1,5 +1,11 @@
 # Polyquest Wormhole smart contract
 
+## Installation
+Install all packages using
+```
+npm i -f
+```
+
 ## Deployment
 Deploy Polyquest Wormhole smart contract using
 ```
