@@ -172,3 +172,5 @@ const main = async () => {
     // await registerEmitter(process.env.WORMHOLE_BASE_BRIDGE_ADDRESS!, targetChain);
     await betCrossChain(targetChain, process.env.WORMHOLE_BASE_BRIDGE_ADDRESS!, marketKey, seq);
 }
+
+main();
