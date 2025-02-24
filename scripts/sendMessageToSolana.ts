@@ -7,10 +7,11 @@ import IDL from "../program/market.json";
 import { ForecastMarket } from "../program/market";
 import secretKey from "../wallet.json";
 import * as dotenv from "dotenv";
-import { CONTRACTS, parseVaa, SignedVaa } from "@certusone/wormhole-sdk";
+import { ChainId, CHAINS, CONTRACTS, parseVaa, SignedVaa } from "@certusone/wormhole-sdk";
 import { derivePostedVaaKey } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 import { NodeWallet } from "@certusone/wormhole-sdk/lib/cjs/solana";
 import { postVaa } from "@certusone/wormhole-sdk/lib/cjs/solana/sendAndConfirmPostVaa";
+import { getAddr, nativeChainId, WormholeChainId } from "./constant";
 dotenv.config();
 
 
@@ -76,17 +77,19 @@ const receivedPDA = (chainId: number, sequence: BN) => {
     )[0];
   }
 
-const sendMessageToSolana = async (address: string, marketKey: number, answerKey: number, bettingKey: number, bettingToken: string, targetChain: number, amount: number) => {
+const sendMessageToSolana = async (address: string, marketKey: number, answerKey: number, bettingToken: string, amount: number) => {
     const contract = await hre.ethers.getContractAt("WormholeBridge", address);
-    const fee = await contract.quoteEVMDeliveryCost(targetChain);
-    const tx = await contract.sendMessageToEvm(
+    const fee = await contract.getMessageFee();
+
+    const wsol = await hre.ethers.getContractAt("IERC20", bettingToken);
+    const tx_approve = await wsol.approve(address, amount);
+    await tx_approve.wait();
+
+    const tx = await contract.sendMessageToSolana(
       bettingToken, // betting token
       amount,
       marketKey,
       answerKey,
-      bettingKey,
-      targetChain,
-      process.env.WORMHOLE_BASE_BRIDGE_ADDRESS!,
       {
         gasLimit: 1e6, 
         value: fee
@@ -95,21 +98,6 @@ const sendMessageToSolana = async (address: string, marketKey: number, answerKey
     const receipt = await tx.wait();
     const sequence = Buffer.from(receipt!.logs[1].data.slice(2, 66), 'hex');
     return Number(sequence.readBigInt64BE(24));
-}
-
-const registerEmitter = async (emitterAddr: string, chainId: number) => {
-    let emitterArr = new Uint8Array(32);
-    emitterArr.set(Buffer.from(emitterAddr.slice(2), "hex"), 12);
-
-    const tx = await forecastMarketProgram.methods
-      .addForeignEmitter(chainId, [...emitterArr])
-      .accountsPartial({
-        owner: payer.publicKey,
-        configAccount: configPDA(),
-        emitterAccount: foreignEmitterPDA(chainId),
-      })
-      .transaction();
-    return tx;
 }
 
 const betCrossChain = async (chainId: number, emitterAddr: string, marketKey: number, sequence: number) => {
@@ -143,8 +131,8 @@ const betCrossChain = async (chainId: number, emitterAddr: string, marketKey: nu
       .accountsPartial({
         polyquestOwner: payer.publicKey,
         configAccount: configPDA(),
-        marketAccount: marketPDA(new BN(marketKey)),
-        answerAccount: answerPDA(new BN(marketKey)),
+        // marketAccount: marketPDA(new BN(marketKey)),
+        // answerAccount: answerPDA(new BN(marketKey)),
         wormholeProgram: new PublicKey(CORE_BRIDGE_PID),
         posted: derivePostedVaaKey(CORE_BRIDGE_PID, parsedVaa.hash),
         betCrossChainAccount: bettingCrossChainPDA(
@@ -158,19 +146,18 @@ const betCrossChain = async (chainId: number, emitterAddr: string, marketKey: nu
         )
       })
       .transaction();
-
-    await sendAndConfirmTransaction(connection, tx, [payer]);
+    const sig = await sendAndConfirmTransaction(connection, tx, [payer]);
+    console.log("Bet cross chain: ", sig);
 }
 
-const main = async () => {
-    const wh = await wormhole('Testnet', [evm]);
-    const amount = 10, marketKey = 1, answerKey = 2, bettingKey = 3;
-    const targetChain = wh.getChain("BaseSepolia").config.chainId;
-    const bettingToken = "0x66a00769800E651E9DbbA384d2B41A45A9660912" // WSOL
-    const seq = await sendMessageToSolana(process.env.WORMHOLE_BASE_BRIDGE_ADDRESS!, marketKey, answerKey, bettingKey, bettingToken, targetChain, amount);
+const main = async (sendChain: ChainId, bettingToken: string, amount: number, marketKey: number, answerKey: number) => {
+    const senderContractAddress = getAddr("WORMHOLE_INTEGRATION", nativeChainId[sendChain as WormholeChainId]);
+    const seq = await sendMessageToSolana(senderContractAddress, marketKey, answerKey, bettingToken, amount);
 
-    // await registerEmitter(process.env.WORMHOLE_BASE_BRIDGE_ADDRESS!, targetChain);
-    await betCrossChain(targetChain, process.env.WORMHOLE_BASE_BRIDGE_ADDRESS!, marketKey, seq);
+    await betCrossChain(sendChain, senderContractAddress, marketKey, seq);
 }
 
-main();
+const amount = 1000, marketKey = 1, answerKey = 1; // CHANGE
+const sendChain = CHAINS.bsc; // CHANGE
+const bettingToken = "0x66a00769800E651E9DbbA384d2B41A45A9660912" // CHANGE
+main(sendChain, bettingToken, amount, marketKey, answerKey);

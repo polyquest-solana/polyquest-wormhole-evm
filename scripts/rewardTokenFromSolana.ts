@@ -26,6 +26,7 @@ import { wormhole } from "@wormhole-foundation/sdk";
 import solana from "@wormhole-foundation/sdk/solana";
 import { WormholeBridge } from "../typechain-types";
 import * as dotenv from "dotenv";
+import { getAddr, nativeChainId, WormholeChainId } from "./constant";
 dotenv.config();
 
 
@@ -37,7 +38,6 @@ const program = new Program(IDL as Sender, {
   connection: connection,
 });
 
-const recipientChain = CHAINS.arbitrum_sepolia;
 const payer = Keypair.fromSecretKey(Uint8Array.from(secretKey));
 
 const deriveTmpTokenAccountKey = (
@@ -73,7 +73,6 @@ export function deriveForeignContractKey(
   const seedPrefix = Buffer.from("foreign_contract");
   const chainBuffer = Buffer.alloc(2);
   chainBuffer.writeUInt16LE(chainId, 0); // chainId vào Buffer theo little endian
-  console.log(chainBuffer);
   return deriveAddress([seedPrefix, chainBuffer], programId);
 }
 
@@ -81,35 +80,12 @@ export function deriveSenderConfigKey(programId: PublicKeyInitData) {
   return deriveAddress([Buffer.from("sender")], programId);
 }
 
-const init = async () => {
-  const tokenBridgeAccounts = getTokenBridgeDerivedAccounts(
-    program.programId,
-    TOKEN_BRIDGE_PID,
-    CORE_BRIDGE_PID
-  );
-  const accounts = {
-    owner: payer.publicKey,
-    senderConfig: deriveSenderConfigKey(program.programId),
-    tokenBridgeProgram: TOKEN_BRIDGE_PID,
-    wormholeProgram: CORE_BRIDGE_PID,
-    ...tokenBridgeAccounts,
-  };
-  const tx = await program.methods
-    .initializeBridge(0, 100_000_000)
-    .accounts(accounts)
-    .instruction();
-  const transaction = new Transaction().add(tx);
-
-  const signature = await sendAndConfirmTransaction(connection, transaction, [
-    payer,
-  ]);
-  console.log("Signature Init: ", signature);
-};
-
 const transfer = async (
+  recipientChain: ChainId,
   recipientWallet: string,
   recipientContractAddress: string,
-  mint: PublicKey
+  mint: PublicKey,
+  amount: number
 ) => {
   let recipientAddress = new Uint8Array(32);
   recipientAddress.set(Buffer.from(recipientWallet.slice(2), "hex"), 12);
@@ -132,19 +108,23 @@ const transfer = async (
   );
 
   const fromTokenAccount = await getOrCreateAssociatedTokenAccount(connection, payer, mint, payer.publicKey);
-  const solTransferTransaction = new Transaction()
-    .add(
-      SystemProgram.transfer({
-          fromPubkey: payer.publicKey,
-          toPubkey: fromTokenAccount.address,
-          lamports: LAMPORTS_PER_SOL
-        }),
-        createSyncNativeInstruction(
-          fromTokenAccount.address
+  let wsolBalance = await connection.getBalance(fromTokenAccount.address, 'confirmed');
+  if(wsolBalance >= amount) {
+    const wrapTx = new Transaction()
+      .add(
+        SystemProgram.transfer({
+            fromPubkey: payer.publicKey,
+            toPubkey: fromTokenAccount.address,
+            lamports: amount
+          }),
+          createSyncNativeInstruction(
+            fromTokenAccount.address
+        )
       )
-    )
 
-  await sendAndConfirmTransaction(connection, solTransferTransaction, [payer]);
+    const wrapSig = await sendAndConfirmTransaction(connection, wrapTx, [payer]);
+    console.log("wrapTx signature: ", wrapSig);
+  }
 
   const tokenBridgeAccounts = getTransferNativeWithPayloadCpiAccounts(
     program.programId,
@@ -152,7 +132,7 @@ const transfer = async (
     CORE_BRIDGE_PID,
     payer.publicKey,
     message,
-    fromTokenAccount,
+    fromTokenAccount.address,
     mint
   );
   const accounts = {
@@ -168,7 +148,7 @@ const transfer = async (
   const tx = await program.methods
     .transferCrossChain(
       0,
-      new BN(123456789),
+      new BN(amount),
       [...recipientAddress],
       recipientChain,
       [...recipientContract]
@@ -181,20 +161,9 @@ const transfer = async (
     tx,
     [payer] // Keypair sử dụng để ký giao dịch
   );
+  console.log('Transfer cross chain tx: ', signature);
   return signature;
 };
-
-const registerSolanaSender = async (
-  contract: WormholeBridge,
-  sig: string
-) => {
-  const wh = await wormhole('Testnet', [solana]);
-  const chain = wh.getChain('Solana');
-  let [msgId] = await chain.parseTransaction(sig);
-  let VM = await wh.getVaa(msgId, 'TokenBridge:TransferWithPayload', 1000000);
-  const tx = await contract.registerSender(chain.config.chainId, VM!.emitterAddress.toUint8Array());
-  await tx.wait();
-}
 
 const receiveRewardFromSolana = async (
   contract: WormholeBridge,
@@ -206,19 +175,25 @@ const receiveRewardFromSolana = async (
   let vaaBytes = await wh.getVaaBytes(msgId, 2592000);
   let tx = await contract.redeemTransferWithPayload(vaaBytes!, { gasLimit: 1e6 });
   await tx.wait();
+  console.log('Final evm tx', tx);
 }
 
-const main = async () => {
-  // await init();
+const main = async (recipientChain: ChainId, amount: number) => {
+  let recipientContractAddress = getAddr("WORMHOLE_INTEGRATION", nativeChainId[recipientChain as WormholeChainId]);
+  console.log('Wormhole Integration: ', recipientContractAddress);
+
   const sig = await transfer(
-    "0xc0489CE75b6C23E664F0Bf27E5677A353796cE38",
-    process.env.WORMHOLE_BASE_BRIDGE_ADDRESS!,
-    NATIVE_MINT
+    recipientChain,
+    process.env.PUBLIC_KEY!,
+    recipientContractAddress,
+    NATIVE_MINT,
+    amount
   );
-  
-  let contract = await hre.ethers.getContractAt("WormholeBridge", process.env.WORMHOLE_BASE_BRIDGE_ADDRESS!);
-  // await registerSolanaSender(contract, sig);
+
+  let contract = await hre.ethers.getContractAt("WormholeBridge", recipientContractAddress);
   await receiveRewardFromSolana(contract, sig);
 }
 
-main();
+const recipientChain = CHAINS.base_sepolia; // CHANGE
+const amount = 1_000_000; // CHANGE
+main(recipientChain, amount);

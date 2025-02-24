@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/forecast_market.json`.
  */
 export type ForecastMarket = {
-  "address": "7JUFdGmVTBvsKVtkuDD7msssczBVtfXKB6siJfFcBEoJ",
+  "address": "CiwEZEiypHn1RYXye5dcqKikVLB6xs46fQsFzLT2PPrD",
   "metadata": {
     "name": "forecastMarket",
     "version": "0.1.0",
@@ -427,14 +427,6 @@ export type ForecastMarket = {
         },
         {
           "name": "configAccount",
-          "writable": true
-        },
-        {
-          "name": "marketAccount",
-          "writable": true
-        },
-        {
-          "name": "answerAccount",
           "writable": true
         },
         {

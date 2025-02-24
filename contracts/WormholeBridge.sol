@@ -214,10 +214,6 @@ contract WormholeBridge is Policy, IWormholeReceiver {
 
         ITokenBridge.TransferWithPayload memory transfer = tokenBridge.parseTransferWithPayload(vm.payload);
         address localTokenAddress = tokenBridge.wrappedAsset(transfer.tokenChain, transfer.tokenAddress);
-        if(transfer.tokenChain == 1 && localTokenAddress == address(0)) {
-            bytes32 usdcAddress = circleIntegration.fetchLocalTokenAddress(5, transfer.tokenAddress);
-            localTokenAddress = address(uint160(uint256(usdcAddress)));
-        }
         require(localTokenAddress != address(0), "token not attested");
 
         tokenBridge.completeTransferWithPayload(

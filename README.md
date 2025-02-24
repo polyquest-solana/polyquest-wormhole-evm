@@ -5,41 +5,32 @@ Install all packages using
 ```
 npm i -f
 ```
+Then, create `.env` file with variables based on key-value pairs `.env.example` file
+```
+PUBLIC_KEY=
+PRIVATE_KEY=
+INFURA_KEY=
+```
 
-## Deployment
-Deploy Polyquest Wormhole smart contract using
+## Send betting message to Solana market program
+Go to `scripts\sendMessageToSolana.ts` for messaging cross chain, adjust chainId and betting data.
 ```
-npx hardhat deploy --tags WormholeBridge --network NETWORK_NAME
+const amount = 1000, marketKey = 1, answerKey = 1; // CHANGE
+const sendChain = CHAINS.arbitrum_sepolia; // CHANGE
+const bettingToken = "0x66a00769800E651E9DbbA384d2B41A45A9660912" // CHANGE
 ```
-Write the smart contracts' addresses in .env file with ``WORMHOLE_networkname_BRIDGE_ADDRESS``
-There are deployments for 4 testnet chains: BSC testnet, C-Chain Fuji, Arbitrum Sepolia, Base Sepolia
+Then run:
+```
+npx hardhat run scripts\sendMessageToSolana.ts
+```
 
-## Getting started
-
-### Register sender program
+## Receive reward token from Solana market program
+Go to `scripts\rewardTokenFromSolana.ts` for transferring token cross chain, adjust chainId and simulated reward amount.
 ```
-function registerSender(uint16 sourceChain, bytes32 sourceAddress) external onlyPolicy
+const recipientChain = CHAINS.base_sepolia; // CHANGE
+const amount = 1_000_000; // CHANGE
 ```
-* ``sourceChain``: sender's chainId
-* ``sourceAddress``: sender's address
-* ``onlyPolicy``: only owner of this contract can call this function
-
-### Send betting message to Solana market program
+Then run:
 ```
-function sendMessageToSolana(
-    address _bettingToken,
-    uint64 _amount,
-    uint64 _marketId,
-    uint64 _answerId
-) external payable
+npx hardhat run scripts\rewardTokenFromSolana.ts
 ```
-* ``_bettingToken``: token address used for betting in evm chains
-* ``_amount``: amount for betting
-* ``_marketId``: marketId in solana
-* ``_answerId``: answerId in solana
-
-### Receive reward token from Solana market program
-```
-function redeemTransferWithPayload(bytes memory encodedVM) public
-```
-* ``encodeVM``: the encoded vaa in bytes
