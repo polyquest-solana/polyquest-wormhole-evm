@@ -110,6 +110,7 @@ const transfer = async (
   const fromTokenAccount = await getOrCreateAssociatedTokenAccount(connection, payer, mint, payer.publicKey);
   let wsolBalance = await connection.getBalance(fromTokenAccount.address, 'confirmed');
   if(wsolBalance >= amount) {
+    console.log("Backend will wrap sol to transfer cross chain");
     const wrapTx = new Transaction()
       .add(
         SystemProgram.transfer({
@@ -145,6 +146,7 @@ const transfer = async (
     tokenBridgeProgram: TOKEN_BRIDGE_PID,
     ...tokenBridgeAccounts,
   };
+  console.log("Backend will call transfer cross chain to send reward to users");
   const tx = await program.methods
     .transferCrossChain(
       0,
@@ -173,6 +175,7 @@ const receiveRewardFromSolana = async (
   const chain = wh.getChain('Solana');
   let [msgId] = await chain.parseTransaction(sig);
   let vaaBytes = await wh.getVaaBytes(msgId, 2592000);
+  console.log("Users call evm contract to redeem reward");
   let tx = await contract.redeemTransferWithPayload(vaaBytes!, { gasLimit: 1e6 });
   await tx.wait();
   console.log('Final evm tx', tx);
@@ -180,7 +183,7 @@ const receiveRewardFromSolana = async (
 
 const main = async (recipientChain: ChainId, amount: number) => {
   let recipientContractAddress = getAddr("WORMHOLE_INTEGRATION", nativeChainId[recipientChain as WormholeChainId]);
-  console.log('Wormhole Integration: ', recipientContractAddress);
+  console.log('Wormhole Integration address: ', recipientContractAddress);
 
   const sig = await transfer(
     recipientChain,

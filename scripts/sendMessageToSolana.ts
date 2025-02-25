@@ -82,9 +82,11 @@ const sendMessageToSolana = async (address: string, marketKey: number, answerKey
     const fee = await contract.getMessageFee();
 
     const wsol = await hre.ethers.getContractAt("IERC20", bettingToken);
+    console.log("Users call approve first to lock their assets in smart contract");
     const tx_approve = await wsol.approve(address, amount);
     await tx_approve.wait();
 
+    console.log("Users call evm contract to send their cross chain message");
     const tx = await contract.sendMessageToSolana(
       bettingToken, // betting token
       amount,
@@ -96,6 +98,7 @@ const sendMessageToSolana = async (address: string, marketKey: number, answerKey
       }
     );
     const receipt = await tx.wait();
+    console.log("User's evm tx: ", tx);
     const sequence = Buffer.from(receipt!.logs[1].data.slice(2, 66), 'hex');
     return Number(sequence.readBigInt64BE(24));
 }
@@ -117,6 +120,7 @@ const betCrossChain = async (chainId: number, emitterAddr: string, marketKey: nu
     let accountInfo = await connection.getAccountInfo(PostVaaAccount);
     if (!accountInfo) {
       const wallet = NodeWallet.fromSecretKey(payer.secretKey);
+      console.log("Backend will call postVaa to create postvaa pda");
       await postVaa(
         connection,
         wallet.signTransaction,
@@ -124,8 +128,10 @@ const betCrossChain = async (chainId: number, emitterAddr: string, marketKey: nu
         wallet.key(),
         Buffer.from(data.vaaBytes, "base64")
       );
+      console.log("PostVaa pda created");
     }
 
+    console.log("Backend will call bet cross chain to update betting data of users from evm chains");
     const tx = await forecastMarketProgram.methods
     .betCrossChain([...parsedVaa.hash])
       .accountsPartial({
@@ -147,11 +153,12 @@ const betCrossChain = async (chainId: number, emitterAddr: string, marketKey: nu
       })
       .transaction();
     const sig = await sendAndConfirmTransaction(connection, tx, [payer]);
-    console.log("Bet cross chain: ", sig);
+    console.log("Bet cross chain tx: ", sig);
 }
 
 const main = async (sendChain: ChainId, bettingToken: string, amount: number, marketKey: number, answerKey: number) => {
     const senderContractAddress = getAddr("WORMHOLE_INTEGRATION", nativeChainId[sendChain as WormholeChainId]);
+    console.log('Wormhole Integration address: ', senderContractAddress);
     const seq = await sendMessageToSolana(senderContractAddress, marketKey, answerKey, bettingToken, amount);
 
     await betCrossChain(sendChain, senderContractAddress, marketKey, seq);
