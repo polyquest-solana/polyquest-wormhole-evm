@@ -1,17 +1,5 @@
 # Polyquest Wormhole smart contract
 
-## Installation
-Install all packages using
-```
-npm i -f
-```
-Then, create `.env` file with variables based on key-value pairs from `.env.example`
-```
-PUBLIC_KEY=
-PRIVATE_KEY=
-INFURA_KEY=
-```
-
 ## BSC, Base, ARB, Avax Wormhole integration code
 
 ### Smart contract addresses
@@ -30,7 +18,20 @@ For more addresses of each chain, go to `scripts\constant`
 ### Frontend code
 Not done yet.
 
-## Test scripts
+## Testing framework
+
+### Installation
+Install all packages using
+```
+npm i -f
+```
+Then, create `.env` file with variables based on key-value pairs from `.env.example`
+```
+PUBLIC_KEY=
+PRIVATE_KEY=
+INFURA_KEY=
+```
+There are 2 flow: Betting cross-chain and receiving reward cross-chain
 
 ### Send betting message to Solana market program
 Go to `scripts\sendMessageToSolana.ts` for messaging cross-chain simulation, adjust the chainId and betting data from the lines bellow if needed.
