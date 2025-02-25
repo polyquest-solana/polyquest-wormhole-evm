@@ -1,6 +1,8 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomiclabs/hardhat-ethers";
 import "hardhat-deploy";
+import "./scripts/sendMessageToSolana";
+import "./scripts/rewardTokenFromSolana";
 import * as dotenv from "dotenv";
 
 dotenv.config();

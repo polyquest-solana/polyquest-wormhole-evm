@@ -138,7 +138,7 @@ export const transferCrossChain = async (
     tokenBridgeProgram: TOKEN_BRIDGE_PID,
     ...tokenBridgeAccounts,
   };
-  console.log("Backend will call transfer cross chain to send reward to users");
+  console.log("Backend will call transfer cross-chain to send reward to users");
   const tx = await program.methods
     .transferCrossChain(
       0,
@@ -155,6 +155,6 @@ export const transferCrossChain = async (
     tx,
     [payer] // Keypair sử dụng để ký giao dịch
   );
-  console.log('Transfer cross chain tx: ', signature);
+  console.log('Transfer cross-chain tx: ', signature);
   return signature;
 };

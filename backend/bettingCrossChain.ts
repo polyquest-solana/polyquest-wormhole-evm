@@ -100,7 +100,7 @@ export const betCrossChain = async (chainId: number, emitterAddr: string, market
       console.log("PostVaa pda created");
     }
 
-    console.log("Backend will call bet cross chain to update betting data of users from evm chains");
+    console.log("Backend will call bet cross-chain to update betting data of users from evm chains");
     const tx = await forecastMarketProgram.methods
     .betCrossChain([...parsedVaa.hash])
       .accountsPartial({
@@ -122,5 +122,5 @@ export const betCrossChain = async (chainId: number, emitterAddr: string, market
       })
       .transaction();
     const sig = await sendAndConfirmTransaction(connection, tx, [payer]);
-    console.log("Bet cross chain tx: ", sig);
+    console.log("Bet cross-chain tx: ", sig);
 }

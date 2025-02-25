@@ -15,9 +15,6 @@ For more addresses of each chain, go to `scripts\constant`
 - Betting messaging backend in: `backend\BettingCrossChain`
 - Token transferring backend in: `backend\RewardCrossChain`
 
-### Frontend code
-Not done yet.
-
 ## Testing framework
 
 ### Installation
@@ -34,41 +31,39 @@ INFURA_KEY=
 There are 2 flow: Betting cross-chain and receiving reward cross-chain
 
 ### Send betting message to Solana market program
-Go to `scripts\sendMessageToSolana.ts` for messaging cross-chain simulation, adjust the chainId and betting data from the lines bellow if needed.
+Run this command:
 ```
-const amount = 1000, marketKey = 1, answerKey = 1; // CHANGE
-const sendChain = CHAINS.arbitrum_sepolia; // CHANGE
-const bettingToken = "0x66a00769800E651E9DbbA384d2B41A45A9660912" // CHANGE
+npx hardhat bet WORMHOLE_CHAIN_ID TOKEN_ADDRESS AMOUNT MARKET_KEY ANSWER_KEY
 ```
-Then run:
-```
-npx hardhat run scripts\sendMessageToSolana.ts
-```
+* WORMHOLE_CHAIN_ID: Wormhole's evm chain id (BSC, Base Sepolia, Arbitrum Sepolia, Avalanche)
+* TOKEN_ADDRESS: address of token used to bet cross-chain
+* AMOUNT: amount of token used to bet cross-chain
+* MARKET_KEY: the active market id
+* ANSWER_KEY: the selected answer id
 The betting cross-chain messaging's flow will be shown on the terminal.
 
-### Receive reward token from Solana market program
-Go to `scripts\rewardTokenFromSolana.ts` for transferring token cross-chain simulation, adjust chainId and simulated reward amount from the lines bellow if needed.
+### Receive reward token from Solana market program (only WSOL at the moment)
+Run this command:
 ```
-const recipientChain = CHAINS.base_sepolia; // CHANGE
-const amount = 1_000_000; // CHANGE
+npx hardhat reward WORMHOLE_CHAIN_ID AMOUNT
 ```
-Then run:
-```
-npx hardhat run scripts\rewardTokenFromSolana.ts
-```
+* WORMHOLE_CHAIN_ID: Wormhole's evm chain id (BSC, Base Sepolia, Arbitrum Sepolia, Avalanche)
+* AMOUNT: amount of token rewarded cross-chain
 The token transfer's flow will be shown on the terminal.
 
 ## User guide
 
 ### Getting started
-This repository is an EVM smart contract for users who make predictions to Polyquest's markets from BSC, Base, Arbitrum and Avanlanche. There are 2 user flow:
+This repository is an EVM smart contract for users who make predictions to Polyquest's markets from BSC, Base, Arbitrum and Avalanche. There are 2 user flow:
 - Betting cross-chain: Users will interact with this smart contract, and the smart contract will send a cross-chain message to Polyquest by backend.
 - Rewarding cross-chain: Users will call the backend to make a token transferring transaction from Solana. Then users will interact with this smart contract to redeem transferring message and collect the reward.
 
 ### Betting cross-chain
-Users from BSC, Base, Arbitrum and Avalanche can normally access Polyquest by connecting their wallet.
-Users can visit `/prediction` site to explore active markets.
-Users can select a market and press `Vote` button to make their predictions. Their assets will be locked in this smart contract, and their cross-chain betting data will be transferred to Solana market.
+Users from BSC, Base, Arbitrum and Avalanche can normally access Polyquest by visiting `https://polyquest.xyz/quests` and connecting their wallet.
+Users can select a market by click to the market.
+After selecting the market, users select one of the answers (below the `Vote` button) and enter the amount of token used for betting in the `Amount` input (next to the `Vote` button).
+Finally, users press `Vote` button to make their predictions. Their assets will be locked in this smart contract, and their cross-chain betting data will be transferred to Solana market.
 ### Receiving reward cross-chain
 After a market success, users can visit `/myPage` site to look for their reward.
+User press `Reward` tab to show their rewards.
 User can press `Claim` button to claim their reward from Solana.

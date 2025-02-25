@@ -1,5 +1,4 @@
-import * as hre from "hardhat";
-import { ChainId, CHAINS } from "@certusone/wormhole-sdk";
+import { ChainId } from "@certusone/wormhole-sdk";
 import { wormhole } from "@wormhole-foundation/sdk";
 import solana from "@wormhole-foundation/sdk/solana";
 import { WormholeBridge } from "../typechain-types";
@@ -7,6 +6,7 @@ import * as dotenv from "dotenv";
 import { getAddr, nativeChainId, WormholeChainId } from "./constant";
 import { transferCrossChain } from "../backend/rewardCrossChain";
 import { NATIVE_MINT } from "@solana/spl-token";
+import { task } from "hardhat/config";
 dotenv.config();
 
 
@@ -24,22 +24,26 @@ const receiveRewardFromSolana = async (
   console.log('Final evm tx', tx);
 }
 
-const main = async (recipientChain: ChainId, amount: number) => {
-  let recipientContractAddress = getAddr("WORMHOLE_INTEGRATION", nativeChainId[recipientChain as WormholeChainId]);
-  console.log('Wormhole Integration address: ', recipientContractAddress);
+const main = async (contract: WormholeBridge, recipientChain: ChainId, amount: number) => {
 
   const sig = await transferCrossChain(
     recipientChain,
     process.env.PUBLIC_KEY!,
-    recipientContractAddress,
+    contract.address,
     NATIVE_MINT,
     amount
   );
 
-  let contract = await hre.ethers.getContractAt("WormholeBridge", recipientContractAddress);
   await receiveRewardFromSolana(contract, sig);
 }
 
-const recipientChain = CHAINS.base_sepolia; // CHANGE
-const amount = 1_000_000; // CHANGE
-main(recipientChain, amount);
+task("reward", "Test receiving reward cross-chain")
+.addPositionalParam("chain")
+.addPositionalParam("amount")
+.setAction(async (taskAgrs, hre) => {
+  let recipientContractAddress = getAddr("WORMHOLE_INTEGRATION", nativeChainId[taskAgrs.chain as WormholeChainId]);
+  console.log('Wormhole Integration address: ', recipientContractAddress);
+
+  let contract = await hre.ethers.getContractAt("WormholeBridge", recipientContractAddress);
+  await main(contract, taskAgrs.chain, taskAgrs.amount);
+})

@@ -1,21 +1,16 @@
 import * as dotenv from "dotenv";
-import * as hre from "hardhat";
-import { ChainId, CHAINS } from "@certusone/wormhole-sdk";
+import { ChainId } from "@certusone/wormhole-sdk";
 import { getAddr, nativeChainId, WormholeChainId } from "./constant";
 import { betCrossChain } from "../backend/bettingCrossChain";
+import { task } from "hardhat/config";
+import { WormholeBridge } from "../typechain-types";
 dotenv.config();
 
 
-const sendMessageToSolana = async (address: string, marketKey: number, answerKey: number, bettingToken: string, amount: number) => {
-    const contract = await hre.ethers.getContractAt("WormholeBridge", address);
+const sendMessageToSolana = async (contract: WormholeBridge, marketKey: number, answerKey: number, bettingToken: string, amount: number) => {
     const fee = await contract.getMessageFee();
 
-    const wsol = await hre.ethers.getContractAt("IERC20", bettingToken);
-    console.log("Users call approve first to lock their assets in smart contract");
-    const tx_approve = await wsol.approve(address, amount);
-    await tx_approve.wait();
-
-    console.log("Users call evm contract to send their cross chain message");
+    console.log("Users call evm contract to send their cross-chain message");
     const tx = await contract.sendMessageToSolana(
       bettingToken, // betting token
       amount,
@@ -33,15 +28,26 @@ const sendMessageToSolana = async (address: string, marketKey: number, answerKey
 }
 
 
-const main = async (sendChain: ChainId, bettingToken: string, amount: number, marketKey: number, answerKey: number) => {
-    const senderContractAddress = getAddr("WORMHOLE_INTEGRATION", nativeChainId[sendChain as WormholeChainId]);
-    console.log('Wormhole Integration address: ', senderContractAddress);
-    const seq = await sendMessageToSolana(senderContractAddress, marketKey, answerKey, bettingToken, amount);
+const main = async (contract: WormholeBridge, sendChain: ChainId, bettingToken: string, amount: number, marketKey: number, answerKey: number) => {
+    const seq = await sendMessageToSolana(contract, marketKey, answerKey, bettingToken, amount);
 
-    await betCrossChain(sendChain, senderContractAddress, marketKey, seq);
+    await betCrossChain(sendChain, contract.address, marketKey, seq);
 }
 
-const amount = 1000, marketKey = 1, answerKey = 1; // CHANGE
-const sendChain = CHAINS.bsc; // CHANGE
-const bettingToken = "0x66a00769800E651E9DbbA384d2B41A45A9660912" // CHANGE
-main(sendChain, bettingToken, amount, marketKey, answerKey);
+task("bet", "Test betting cross-chain")
+.addPositionalParam("chain")
+.addPositionalParam("token")
+.addPositionalParam("amount")
+.addPositionalParam("market")
+.addPositionalParam("answer")
+.setAction(async (taskAgrs, hre) => {
+  let recipientContractAddress = getAddr("WORMHOLE_INTEGRATION", nativeChainId[taskAgrs.chain as WormholeChainId]);
+  console.log('Wormhole Integration address: ', recipientContractAddress);
+  let contract = await hre.ethers.getContractAt("WormholeBridge", recipientContractAddress);
+
+  const wsol = await hre.ethers.getContractAt("IERC20", taskAgrs.token);
+  console.log("Users call approve first to lock their assets in smart contract");
+  const tx_approve = await wsol.approve(contract.address, taskAgrs.amount);
+  await tx_approve.wait();
+  await main(contract, taskAgrs.chain, taskAgrs.token, taskAgrs.amount, taskAgrs.market, taskAgrs.answer);
+})
