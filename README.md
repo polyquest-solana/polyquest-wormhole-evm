@@ -12,12 +12,25 @@ PRIVATE_KEY=
 INFURA_KEY=
 ```
 
-## Getting started
-This repository is an EVM smart contract for users who make predictions to Polyquest's markets from BSC, Base, Arbitrum and Avanlanche. There are 2 user flow:
-- Betting cross-chain: Users will interact with this smart contract, and the smart contract will send a cross-chain message to Polyquest by backend.
-- Rewarding cross-chain: Users will call the backend to make a token transferring transaction from Solana. Then users will interact with this smart contract to redeem transferring message and collect the reward.
+## BSC, Base, ARB, Avax Wormhole integration code
 
-## Simulation
+### Smart contract addresses
+```
+Wormhole integration BSC testnet: 0xA081972981013799A5fB5b573CaC6cc75Dc4F1Eb
+Wormhole integration Base Sepolia: 0xEBbB9316B91D8dCEA5BcC472F9c43163F96A9007
+Wormhole integration Arbitrum Sepolia: 0x6dFbA3394EE4Cf592c2aD72712DE9892F0aa1433
+Wormhole integration Avalanche: 0x90a999c7c9e50ed9F46Eaf3a9f9996E166b040Be
+```
+For more addresses of each chain, go to `scripts\constant`
+
+### Backend code
+- Betting messaging backend in: `backend\BettingCrossChain`
+- Token transferring backend in: `backend\RewardCrossChain`
+
+### Frontend code
+Not done yet.
+
+## Test scripts
 
 ### Send betting message to Solana market program
 Go to `scripts\sendMessageToSolana.ts` for messaging cross-chain simulation, adjust the chainId and betting data from the lines bellow if needed.
@@ -45,6 +58,11 @@ npx hardhat run scripts\rewardTokenFromSolana.ts
 The token transfer's flow will be shown on the terminal.
 
 ## User guide
+
+### Getting started
+This repository is an EVM smart contract for users who make predictions to Polyquest's markets from BSC, Base, Arbitrum and Avanlanche. There are 2 user flow:
+- Betting cross-chain: Users will interact with this smart contract, and the smart contract will send a cross-chain message to Polyquest by backend.
+- Rewarding cross-chain: Users will call the backend to make a token transferring transaction from Solana. Then users will interact with this smart contract to redeem transferring message and collect the reward.
 
 ### Betting cross-chain
 Users from BSC, Base, Arbitrum and Avalanche can normally access Polyquest by connecting their wallet.
