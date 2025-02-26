@@ -16,6 +16,10 @@ For more addresses of each chain, go to `scripts\constant`
 - Betting messaging backend in: `backend\BettingCrossChain`
 - Token transferring backend in: `backend\RewardCrossChain`
 
+### Handling prediction data transfers using Wormhole's publishMessage and verifyVAA function
+- Messaging betting data from Bsc, Base, Arbitrum, Avalanche to Solana: using Wormhole's `publishMessage` in `sendMessageToSolana` function in `contracts\WormholeBridge.sol`.
+- Messaging reward data from Solana to Bsc, Base, Arbitrum, Avalanche: using Wormhole's `parseAndVerifyVM` in `receiveSolanaMessage` function in `contracts\WormholeBridge.sol`.
+
 ## 2. Testing framework and QA
 
 ### Installation
