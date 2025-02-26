@@ -1,6 +1,7 @@
 # Polyquest Wormhole smart contract
 
-## BSC, Base, ARB, Avax Wormhole integration code
+## 1. BSC, Base, ARB, Avax Wormhole integration code
+Link: [Polyquest Wormhole EVM](https://github.com/polyquest-solana/polyquest-wormhole-evm)
 
 ### Smart contract addresses
 ```
@@ -15,7 +16,7 @@ For more addresses of each chain, go to `scripts\constant`
 - Betting messaging backend in: `backend\BettingCrossChain`
 - Token transferring backend in: `backend\RewardCrossChain`
 
-## Testing framework
+## 2. Testing framework and QA
 
 ### Installation
 Install all packages using
@@ -51,7 +52,7 @@ npx hardhat reward WORMHOLE_CHAIN_ID AMOUNT
 * AMOUNT: amount of token rewarded cross-chain
 The token transfer's flow will be shown on the terminal.
 
-## User guide
+## 3. User(dev) guide
 
 ### Getting started
 This repository is an EVM smart contract for users who make predictions to Polyquest's markets from BSC, Base, Arbitrum and Avalanche. There are 2 user flow:
