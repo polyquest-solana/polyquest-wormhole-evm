@@ -12,7 +12,9 @@ const forecastMarketProgram = new Program(IDL as ForecastMarket, {
 const marketKey = Buffer.alloc(8);
 marketKey.writeBigUInt64LE(1n);
 const marketSeed = Buffer.from("market", 'utf-8');
-const seeds = [marketSeed, marketKey];
+const configSeed = Buffer.from("config", 'utf-8');
+// const seeds = [marketSeed, marketKey];
+const seeds = [configSeed];
 
 
 const main = async () => {
@@ -36,7 +38,7 @@ const main = async () => {
     
     const queryResponse = QueryResponse.from(Buffer.from(resp.bytes, "hex"));
     const solResponse = queryResponse.responses[0].response as SolanaPdaQueryResponse;
-    console.log(queryResponse.responses[0].response);
+    console.log('PDA Data', solResponse.results[0].data);
 }
 
 main();
