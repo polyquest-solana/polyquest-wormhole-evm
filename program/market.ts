@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/forecast_market.json`.
  */
 export type ForecastMarket = {
-  "address": "CiwEZEiypHn1RYXye5dcqKikVLB6xs46fQsFzLT2PPrD",
+  "address": "biKoNwBzPVkGnQoT18NPaA2V3iUxtyxr4Y1o87gkJfJ",
   "metadata": {
     "name": "forecastMarket",
     "version": "0.1.0",
@@ -430,6 +430,14 @@ export type ForecastMarket = {
           "writable": true
         },
         {
+          "name": "marketAccount",
+          "writable": true
+        },
+        {
+          "name": "answerAccount",
+          "writable": true
+        },
+        {
           "name": "wormholeProgram",
           "address": "3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5"
         },
@@ -492,6 +500,201 @@ export type ForecastMarket = {
               32
             ]
           }
+        }
+      ]
+    },
+    {
+      "name": "claimCrossChain",
+      "discriminator": [
+        216,
+        51,
+        166,
+        225,
+        222,
+        46,
+        13,
+        163
+      ],
+      "accounts": [
+        {
+          "name": "polyquestOwner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "docs": [
+            "Sender Config account. Acts as the signer for the Token Bridge token",
+            "transfer. Read-only."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  110,
+                  100,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "configAccount",
+          "writable": true
+        },
+        {
+          "name": "betMint",
+          "writable": true
+        },
+        {
+          "name": "rewardMint",
+          "writable": true
+        },
+        {
+          "name": "vaultBetTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "vaultRewardTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "tmpTokenAccount",
+          "docs": [
+            "Program's temporary token account. This account is created before the",
+            "instruction is invoked to temporarily take custody of the payer's",
+            "tokens. When the tokens are finally bridged out, the token account",
+            "will have zero balance and can be closed."
+          ]
+        },
+        {
+          "name": "marketAccount",
+          "writable": true
+        },
+        {
+          "name": "betAccount",
+          "writable": true
+        },
+        {
+          "name": "answerAccount",
+          "writable": true
+        },
+        {
+          "name": "foreignEmitter",
+          "docs": [
+            "Foreign emitter account. The posted message's `emitter_address` must",
+            "agree with the one we have registered for this message's `emitter_chain`",
+            "(chain ID). Read-only."
+          ]
+        },
+        {
+          "name": "tokenBridgeProgram",
+          "docs": [
+            "Token Bridge program."
+          ],
+          "address": "DZnkkTmCiFWfYTfT41X3Rd1kDgozqzxWaHqsw6W4x2oe"
+        },
+        {
+          "name": "tokenBridgeConfig",
+          "docs": [
+            "Token Bridge config. Read-only."
+          ]
+        },
+        {
+          "name": "tokenBridgeCustody",
+          "docs": [
+            "account that holds this mint's balance. This account needs to be",
+            "unchecked because a token account may not have been created for this",
+            "mint yet. Mutable."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "betMint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenBridgeAuthoritySigner"
+        },
+        {
+          "name": "tokenBridgeCustodySigner"
+        },
+        {
+          "name": "wormholeBridge",
+          "docs": [
+            "Wormhole bridge data. Mutable."
+          ],
+          "writable": true
+        },
+        {
+          "name": "wormholeMessage",
+          "docs": [
+            "tokens transferred in this account for our program. Mutable."
+          ],
+          "writable": true
+        },
+        {
+          "name": "tokenBridgeEmitter",
+          "writable": true
+        },
+        {
+          "name": "tokenBridgeSequence",
+          "writable": true
+        },
+        {
+          "name": "wormholeFeeCollector",
+          "docs": [
+            "Wormhole fee collector. Mutable."
+          ],
+          "writable": true
+        },
+        {
+          "name": "clock",
+          "docs": [
+            "Clock sysvar."
+          ],
+          "address": "SysvarC1ock11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "docs": [
+            "Rent sysvar."
+          ],
+          "address": "SysvarRent111111111111111111111111111111111"
+        },
+        {
+          "name": "wormholeProgram",
+          "docs": [
+            "Wormhole program."
+          ],
+          "address": "3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5"
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "lockedAmount",
+          "type": "u64"
         }
       ]
     },
@@ -822,6 +1025,301 @@ export type ForecastMarket = {
         {
           "name": "rewardApr",
           "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "initializeBridge",
+      "discriminator": [
+        6,
+        173,
+        152,
+        229,
+        35,
+        112,
+        127,
+        151
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "docs": [
+            "Whoever initializes the config will be the owner of the program. Signer",
+            "for creating the [`SenderConfig`] and [`RedeemerConfig`] accounts."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "senderConfig",
+          "docs": [
+            "Sender Config account, which saves program data useful for other",
+            "instructions, specifically for outbound transfers. Also saves the payer",
+            "of the [`initialize`](crate::initialize) instruction as the program's",
+            "owner."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  110,
+                  100,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "wormholeProgram",
+          "docs": [
+            "Wormhole program."
+          ],
+          "address": "3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5"
+        },
+        {
+          "name": "tokenBridgeProgram",
+          "docs": [
+            "Token Bridge program."
+          ],
+          "address": "DZnkkTmCiFWfYTfT41X3Rd1kDgozqzxWaHqsw6W4x2oe"
+        },
+        {
+          "name": "tokenBridgeConfig",
+          "docs": [
+            "Token Bridge config. Token Bridge program needs this account to",
+            "invoke the Wormhole program to post messages. Even though it is a",
+            "required account for redeeming token transfers, it is not actually",
+            "used for completing these transfers."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenBridgeAuthoritySigner",
+          "docs": [
+            "data; it is purely just a signer for SPL tranfers when it is delegated",
+            "spending approval for the SPL token."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121,
+                  95,
+                  115,
+                  105,
+                  103,
+                  110,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenBridgeCustodySigner",
+          "docs": [
+            "data; it is purely just a signer for Token Bridge SPL tranfers."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  117,
+                  115,
+                  116,
+                  111,
+                  100,
+                  121,
+                  95,
+                  115,
+                  105,
+                  103,
+                  110,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenBridgeMintAuthority",
+          "docs": [
+            "data; it is purely just a signer (SPL mint authority) for Token Bridge",
+            "wrapped assets."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  115,
+                  105,
+                  103,
+                  110,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "wormholeBridge",
+          "docs": [
+            "Wormhole bridge data account (a.k.a. its config)."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  66,
+                  114,
+                  105,
+                  100,
+                  103,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenBridgeEmitter",
+          "docs": [
+            "that holds data; it is purely just a signer for posting Wormhole",
+            "messages on behalf of the Token Bridge program."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  109,
+                  105,
+                  116,
+                  116,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "wormholeFeeCollector",
+          "docs": [
+            "Wormhole fee collector account, which requires lamports before the",
+            "program can post a message (if there is a fee). Token Bridge program",
+            "handles the fee payments."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  99,
+                  111,
+                  108,
+                  108,
+                  101,
+                  99,
+                  116,
+                  111,
+                  114
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenBridgeSequence",
+          "docs": [
+            "Token Bridge emitter's sequence account. Like with all Wormhole",
+            "emitters, this account keeps track of the sequence number of the last",
+            "posted message."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  83,
+                  101,
+                  113,
+                  117,
+                  101,
+                  110,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "tokenBridgeEmitter"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "docs": [
+            "System program."
+          ],
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "relayerFee",
+          "type": "u32"
+        },
+        {
+          "name": "relayerFeePrecision",
+          "type": "u32"
         }
       ]
     },
@@ -1195,6 +1693,19 @@ export type ForecastMarket = {
         222,
         41
       ]
+    },
+    {
+      "name": "senderConfig",
+      "discriminator": [
+        0,
+        241,
+        220,
+        77,
+        167,
+        128,
+        79,
+        152
+      ]
     }
   ],
   "events": [
@@ -1447,6 +1958,51 @@ export type ForecastMarket = {
       "code": 6020,
       "name": "invalidMessage",
       "msg": "Invalid message"
+    },
+    {
+      "code": 6021,
+      "name": "invalidRecipient",
+      "msg": "Invalid recipient"
+    },
+    {
+      "code": 6022,
+      "name": "invalidRelayerFee",
+      "msg": "Invalid relayer fee"
+    },
+    {
+      "code": 6023,
+      "name": "invalidTokenBridgeCustodySigner",
+      "msg": "Invalid token bridge custody signer"
+    },
+    {
+      "code": 6024,
+      "name": "invalidTokenBridgeAuthoritySigner",
+      "msg": "Invalid token bridge authority signer"
+    },
+    {
+      "code": 6025,
+      "name": "invalidTokenBridgeConfig",
+      "msg": "Invalid token bridge config"
+    },
+    {
+      "code": 6026,
+      "name": "invalidTokenBridgeEmitter",
+      "msg": "Invalid token bridge emitter"
+    },
+    {
+      "code": 6027,
+      "name": "invalidTokenBridgeSequence",
+      "msg": "Invalid token bridge sequence"
+    },
+    {
+      "code": 6028,
+      "name": "invalidWormholeBridge",
+      "msg": "Invalid token bridge wormhole bridge"
+    },
+    {
+      "code": 6029,
+      "name": "invalidWormholeFeeCollector",
+      "msg": "Invalid token bridge wormhole fee collector"
     }
   ],
   "types": [
@@ -1944,6 +2500,48 @@ export type ForecastMarket = {
       }
     },
     {
+      "name": "outboundTokenBridgeAddresses",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "config",
+            "type": "pubkey"
+          },
+          {
+            "name": "authoritySigner",
+            "type": "pubkey"
+          },
+          {
+            "name": "custodySigner",
+            "type": "pubkey"
+          },
+          {
+            "name": "emitter",
+            "type": "pubkey"
+          },
+          {
+            "name": "sequence",
+            "type": "pubkey"
+          },
+          {
+            "name": "wormholeBridge",
+            "docs": [
+              "[BridgeData](wormhole_anchor_sdk::wormhole::BridgeData) address."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "wormholeFeeCollector",
+            "docs": [
+              "[FeeCollector](wormhole_anchor_sdk::wormhole::FeeCollector) address."
+            ],
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
       "name": "received",
       "docs": [
         "Received account."
@@ -1985,6 +2583,47 @@ export type ForecastMarket = {
           {
             "name": "amount",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "senderConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "docs": [
+              "Program's owner."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "PDA bump."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "tokenBridge",
+            "docs": [
+              "Token Bridge program's relevant addresses."
+            ],
+            "type": {
+              "defined": {
+                "name": "outboundTokenBridgeAddresses"
+              }
+            }
+          },
+          {
+            "name": "finality",
+            "docs": [
+              "AKA consistency level. u8 representation of Solana's",
+              "[Finality](wormhole_anchor_sdk::wormhole::Finality)."
+            ],
+            "type": "u8"
           }
         ]
       }

@@ -11,8 +11,8 @@ import {
   SystemProgram,
   Transaction,
 } from "@solana/web3.js";
-import IDL from "../program/sender.json";
-import { Sender } from "../program/sender";
+import IDL from "../program/market.json";
+import { ForecastMarket } from "../program/market";
 import {
   deriveAddress,
   getTransferNativeWithPayloadCpiAccounts,
@@ -20,13 +20,14 @@ import {
 import { createSyncNativeInstruction, getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
 import secretKey from "../wallet.json";
 import { ChainId, CONTRACTS } from "@certusone/wormhole-sdk";
+import { answerPDA, bettingCrossChainPDA, configPDA, foreignEmitterPDA, marketPDA } from "./getPda";
 
 
 const WORMHOLE_CONTRACTS = CONTRACTS["TESTNET"];
 const CORE_BRIDGE_PID = new PublicKey(WORMHOLE_CONTRACTS.solana.core);
 const TOKEN_BRIDGE_PID = new PublicKey(WORMHOLE_CONTRACTS.solana.token_bridge);
 const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
-const program = new Program(IDL as Sender, {
+const program = new Program(IDL as ForecastMarket, {
   connection: connection,
 });
 
@@ -72,12 +73,14 @@ export function deriveSenderConfigKey(programId: PublicKeyInitData) {
   return deriveAddress([Buffer.from("sender")], programId);
 }
 
-export const transferCrossChain = async (
+export const claimCrossChain = async (
   recipientChain: ChainId,
   recipientWallet: string,
   recipientContractAddress: string,
   mint: PublicKey,
-  amount: number
+  marketKey: number,
+  amount: number,
+  sequence: number,
 ) => {
   let recipientAddress = new Uint8Array(32);
   recipientAddress.set(Buffer.from(recipientWallet.slice(2), "hex"), 12);
@@ -100,24 +103,24 @@ export const transferCrossChain = async (
   );
 
   const fromTokenAccount = await getOrCreateAssociatedTokenAccount(connection, payer, mint, payer.publicKey);
-  let wsolBalance = await connection.getBalance(fromTokenAccount.address, 'confirmed');
-  if(wsolBalance >= amount) {
-    console.log("Backend will wrap sol to transfer cross chain");
-    const wrapTx = new Transaction()
-      .add(
-        SystemProgram.transfer({
-            fromPubkey: payer.publicKey,
-            toPubkey: fromTokenAccount.address,
-            lamports: amount
-          }),
-          createSyncNativeInstruction(
-            fromTokenAccount.address
-        )
-      )
+  // let wsolBalance = await connection.getBalance(fromTokenAccount.address, 'confirmed');
+  // if(wsolBalance >= amount) {
+  //   console.log("Backend will wrap sol to transfer cross chain");
+  //   const wrapTx = new Transaction()
+  //     .add(
+  //       SystemProgram.transfer({
+  //           fromPubkey: payer.publicKey,
+  //           toPubkey: fromTokenAccount.address,
+  //           lamports: amount
+  //         }),
+  //         createSyncNativeInstruction(
+  //           fromTokenAccount.address
+  //       )
+  //     )
 
-    const wrapSig = await sendAndConfirmTransaction(connection, wrapTx, [payer]);
-    console.log("wrapTx signature: ", wrapSig);
-  }
+  //   const wrapSig = await sendAndConfirmTransaction(connection, wrapTx, [payer]);
+  //   console.log("wrapTx signature: ", wrapSig);
+  // }
 
   const tokenBridgeAccounts = getTransferNativeWithPayloadCpiAccounts(
     program.programId,
@@ -128,26 +131,33 @@ export const transferCrossChain = async (
     fromTokenAccount.address,
     mint
   );
-  const accounts = {
-    config: deriveSenderConfigKey(program.programId),
-    foreignContract: deriveForeignContractKey(
-      program.programId,
-      recipientChain
-    ),
-    tmpTokenAccount: deriveTmpTokenAccountKey(program.programId, mint),
-    tokenBridgeProgram: TOKEN_BRIDGE_PID,
-    ...tokenBridgeAccounts,
-  };
+  let marketAccount = marketPDA(new BN(marketKey));
+  let configAccount = configPDA();
+
   console.log("Backend will call transfer cross-chain to send reward to users");
   const tx = await program.methods
-    .transferCrossChain(
-      0,
-      new BN(amount),
-      [...recipientAddress],
-      recipientChain,
-      [...recipientContract]
+    .claimCrossChain(
+      new BN(amount)
     )
-    .accounts(accounts)
+    .accountsPartial({
+      polyquestOwner: payer.publicKey,
+      configAccount,
+      marketAccount,
+      config: deriveSenderConfigKey(program.programId),
+      answerAccount: answerPDA(new BN(marketKey)),
+      betMint: mint,
+      rewardMint: mint,
+      foreignEmitter: foreignEmitterPDA(recipientChain),
+      betAccount: bettingCrossChainPDA(
+        recipientChain,
+        new BN(sequence.toString())
+      ),
+      vaultBetTokenAccount: (await getOrCreateAssociatedTokenAccount(connection, payer, mint, marketAccount, true)).address,
+      vaultRewardTokenAccount: (await getOrCreateAssociatedTokenAccount(connection, payer, mint, configAccount, true)).address,
+      tmpTokenAccount: deriveTmpTokenAccountKey(program.programId, mint),
+      tokenBridgeProgram: TOKEN_BRIDGE_PID,
+      ...tokenBridgeAccounts,
+    })
     .transaction();
 
   const signature = await sendAndConfirmTransaction(

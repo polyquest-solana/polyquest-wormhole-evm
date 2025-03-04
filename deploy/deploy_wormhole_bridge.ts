@@ -15,7 +15,6 @@ const deployWormholeBridge: DeployFunction = async function (hre: HardhatRuntime
       getAddr("WORMHOLE_CORE_ADDRESS", Number(chainId)),
       getAddr("TOKEN_BRIDGE_ADDRESS", Number(chainId)),
       getAddr("WORMHOLE_RELAYER_ADDRESS", Number(chainId)),
-      getAddr("CIRCLE_INTEGRATION", Number(chainId)),
     ],
     log: true,
   });

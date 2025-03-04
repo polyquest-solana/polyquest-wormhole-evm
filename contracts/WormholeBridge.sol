@@ -34,8 +34,10 @@ contract WormholeBridge is Policy, IWormholeReceiver {
     IWormhole public immutable wormhole;
     ITokenBridge public immutable tokenBridge;
     IWormholeRelayer public immutable relayer;
-    ICircleIntegration public immutable circleIntegration;
+    ICircleIntegration public circleIntegration;
+
     mapping(address => mapping (address => uint256)) locked;
+    uint256 public totalLocked;
     mapping(uint16 => bytes32) registeredSenders;
 
     struct Message {
@@ -46,19 +48,20 @@ contract WormholeBridge is Policy, IWormholeReceiver {
     struct TokenTransfer {
         uint8 payloadID;
         bytes32 recipient;
+        uint256 amount;
     }
 
     event TransferToken(address indexed token, uint256 amount);
     event ReceiveMessage(address sender, uint16 sourceChain, bytes32 sourceAddress);
 
-    constructor(address _wormhole, address _tokenBridge, address _wormholeRelayer, address _circleIntegration) Policy() {
+    constructor(address _wormhole, address _tokenBridge, address _wormholeRelayer) Policy() {
         require(_wormhole != address(0), "ZA");
         wormhole = IWormhole(_wormhole);
         require(_tokenBridge != address(0), "ZA");
         tokenBridge = ITokenBridge(_tokenBridge);
         relayer = IWormholeRelayer(_wormholeRelayer);
-        circleIntegration = ICircleIntegration(_circleIntegration);
         NONCE = 0;
+        totalLocked = 0;
     }
 
     modifier onlyRelayer() {
@@ -87,6 +90,8 @@ contract WormholeBridge is Policy, IWormholeReceiver {
         require(msg.value >= messageFee, "Insufficient funds for cross-chain delivery");
         IERC20(_bettingToken).safeTransferFrom(msg.sender, address(this), _amount);
         locked[msg.sender][_bettingToken] = _amount;
+        totalLocked += _amount;
+
         bytes memory messagePayload = abi.encodePacked(
             _marketId,
             _answerId,
@@ -228,9 +233,12 @@ contract WormholeBridge is Policy, IWormholeReceiver {
         );
 
         address recipient = address(uint160(uint256(payload.recipient)));
+        uint256 amount = payload.amount;
+        require(totalLocked >= amount, "Insufficient locked tokens");
+        totalLocked -= amount;
         IERC20(localTokenAddress).safeTransfer(
             recipient,
-            amountTransferred
+            amountTransferred + amount
         );
     }
 
@@ -243,6 +251,8 @@ contract WormholeBridge is Policy, IWormholeReceiver {
         index += 1;
         parsedMessage.recipient = encodedMessage.toBytes32(index);
         index += 32;
+        parsedMessage.amount = uint256(encodedMessage.toUint64(index));
+        index += 8;
         require(index == encodedMessage.length, "invalid payload length");
     }
 
@@ -255,6 +265,15 @@ contract WormholeBridge is Policy, IWormholeReceiver {
 
     function getWormholeChainId() external view returns(uint16) {
         return wormhole.chainId();
+    }
+
+    function getWeth() public view returns(IWETH) {
+        return tokenBridge.WETH();
+    }
+
+    function setCCTP(address _circleIntegration) external onlyPolicy {
+        require(_circleIntegration != address(0), "ZA");
+        circleIntegration = ICircleIntegration(_circleIntegration);
     }
 
     function getSourceAddress(bytes32 tokenAddress, uint16 sourceChain) external view returns(address) {
