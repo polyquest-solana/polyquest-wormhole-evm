@@ -459,14 +459,50 @@
               },
               {
                 "kind": "arg",
-                "path": "vaa_hash"
+                "path": "_vaa_hash"
               }
             ]
           }
         },
         {
           "name": "bet_cross_chain_account",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  95,
+                  99,
+                  114,
+                  111,
+                  115,
+                  115,
+                  95,
+                  99,
+                  104,
+                  97,
+                  105,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "posted"
+              },
+              {
+                "kind": "arg",
+                "path": "_voter_address"
+              }
+            ]
+          }
         },
         {
           "name": "foreign_emitter",
@@ -475,10 +511,6 @@
             "agree with the one we have registered for this message's `emitter_chain`",
             "(chain ID). Read-only."
           ]
-        },
-        {
-          "name": "received",
-          "writable": true
         },
         {
           "name": "system_program",
@@ -492,6 +524,15 @@
             "array": [
               "u8",
               32
+            ]
+          }
+        },
+        {
+          "name": "voter",
+          "type": {
+            "array": [
+              "u8",
+              20
             ]
           }
         }
@@ -564,7 +605,24 @@
             "instruction is invoked to temporarily take custody of the payer's",
             "tokens. When the tokens are finally bridged out, the token account",
             "will have zero balance and can be closed."
-          ]
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  109,
+                  112
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bet_mint"
+              }
+            ]
+          }
         },
         {
           "name": "market_account",
@@ -1676,19 +1734,6 @@
       ]
     },
     {
-      "name": "Received",
-      "discriminator": [
-        227,
-        186,
-        72,
-        102,
-        0,
-        233,
-        222,
-        41
-      ]
-    },
-    {
       "name": "SenderConfig",
       "discriminator": [
         0,
@@ -2531,36 +2576,6 @@
               "[FeeCollector](wormhole_anchor_sdk::wormhole::FeeCollector) address."
             ],
             "type": "pubkey"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Received",
-      "docs": [
-        "Received account."
-      ],
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "batch_id",
-            "docs": [
-              "AKA nonce. Should always be zero in this example, but we save it anyway."
-            ],
-            "type": "u32"
-          },
-          {
-            "name": "wormhole_message_hash",
-            "docs": [
-              "Keccak256 hash of verified Wormhole message."
-            ],
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
           }
         ]
       }

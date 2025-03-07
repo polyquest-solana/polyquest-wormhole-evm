@@ -19,15 +19,17 @@ const forecastMarketProgram = new Program(IDL as ForecastMarket, {
 
 const payer = Keypair.fromSecretKey(Uint8Array.from(secretKey));
 
-export const betCrossChain = async (chainId: number, emitterAddr: string, marketKey: number, sequence: number) => {
-    const signedVaaUrl = `https://api.testnet.wormscan.io/v1/signed_vaa/${chainId}/${emitterAddr}/${sequence}`;
+export const betCrossChain = async (chainId: number, userAddr: string, emitterAddr: string, marketKey: number) => {
+    const signedVaaUrl = `https://api.testnet.wormscan.io/api/v1/vaas/${chainId}/${emitterAddr}`;
     const response = await fetch(signedVaaUrl);
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
     const data = (await response.json()) as any;
+    console.log('Vaa: ', data.data[0]);
+
     const signedVaaUint8Array: SignedVaa = new Uint8Array(
-      Buffer.from(data.vaaBytes, "base64")
+      Buffer.from(data.data[0].vaa, "base64")
     );
 
     const parsedVaa = parseVaa(signedVaaUint8Array);
@@ -42,14 +44,16 @@ export const betCrossChain = async (chainId: number, emitterAddr: string, market
         wallet.signTransaction,
         CORE_BRIDGE_PID,
         wallet.key(),
-        Buffer.from(data.vaaBytes, "base64")
+        Buffer.from(data.data[0].vaa, "base64")
       );
       console.log("PostVaa pda created");
     }
 
     console.log("Backend will call bet cross-chain to update betting data of users from evm chains");
+    let recipientAddress = new Uint8Array(20);
+    recipientAddress.set(Buffer.from(userAddr.slice(2), "hex"));
     const tx = await forecastMarketProgram.methods
-    .betCrossChain([...parsedVaa.hash])
+    .betCrossChain([...parsedVaa.hash], [...recipientAddress])
       .accountsPartial({
         polyquestOwner: payer.publicKey,
         configAccount: configPDA(),
@@ -59,13 +63,9 @@ export const betCrossChain = async (chainId: number, emitterAddr: string, market
         posted: derivePostedVaaKey(CORE_BRIDGE_PID, parsedVaa.hash),
         betCrossChainAccount: bettingCrossChainPDA(
           parsedVaa.emitterChain,
-          new BN(parsedVaa.sequence.toString())
+          recipientAddress
         ),
         foreignEmitter: foreignEmitterPDA(parsedVaa.emitterChain),
-        received: receivedPDA(
-          parsedVaa.emitterChain,
-          new BN(parsedVaa.sequence.toString())
-        )
       })
       .transaction();
     const sig = await sendAndConfirmTransaction(connection, tx, [payer]);

@@ -1,4 +1,4 @@
-import { ChainId } from "@certusone/wormhole-sdk";
+import { ChainId, parseTokenTransferPayload } from "@certusone/wormhole-sdk";
 import { wormhole } from "@wormhole-foundation/sdk";
 import solana from "@wormhole-foundation/sdk/solana";
 import { WormholeBridge } from "../typechain-types";
@@ -24,15 +24,13 @@ const receiveRewardFromSolana = async (
   console.log('Final evm tx', tx);
 }
 
-const main = async (contract: WormholeBridge, recipientChain: ChainId, marketKey: number, sequence: number, totalLocked: bigint) => {
+const main = async (contract: WormholeBridge, recipientChain: ChainId, marketKey: number, totalLocked: bigint) => {
   const sig = await claimCrossChain(
     recipientChain,
     process.env.PUBLIC_KEY!,
-    contract.address,
     NATIVE_MINT,
     marketKey,
-    Number(totalLocked),
-    sequence
+    Number(totalLocked)
   );
 
   await receiveRewardFromSolana(contract, sig);
@@ -40,13 +38,13 @@ const main = async (contract: WormholeBridge, recipientChain: ChainId, marketKey
 
 task("reward", "Test receiving reward cross-chain")
 .addPositionalParam("chain")
+.addPositionalParam('token')
 .addPositionalParam("marketKey")
-.addPositionalParam("sequence")
 .setAction(async (taskAgrs, hre) => {
   let recipientContractAddress = getAddr("WORMHOLE_INTEGRATION", nativeChainId[taskAgrs.chain as WormholeChainId]);
   console.log('Wormhole Integration address: ', recipientContractAddress);
 
   let contract = await hre.ethers.getContractAt("WormholeBridge", recipientContractAddress);
-  let totalLocked = await contract.totalLocked();
-  await main(contract, taskAgrs.chain, taskAgrs.marketKey, totalLocked, taskAgrs.sequence);
+  let totalLocked = await contract.locked(taskAgrs.token);
+  await main(contract, taskAgrs.chain, taskAgrs.marketKey, totalLocked);
 })

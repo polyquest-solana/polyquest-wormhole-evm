@@ -8,8 +8,6 @@ import {
   PublicKey,
   PublicKeyInitData,
   sendAndConfirmTransaction,
-  SystemProgram,
-  Transaction,
 } from "@solana/web3.js";
 import IDL from "../program/market.json";
 import { ForecastMarket } from "../program/market";
@@ -17,7 +15,7 @@ import {
   deriveAddress,
   getTransferNativeWithPayloadCpiAccounts,
 } from "@certusone/wormhole-sdk/lib/cjs/solana";
-import { createSyncNativeInstruction, getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
+import { getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
 import secretKey from "../wallet.json";
 import { ChainId, CONTRACTS } from "@certusone/wormhole-sdk";
 import { answerPDA, bettingCrossChainPDA, configPDA, foreignEmitterPDA, marketPDA } from "./getPda";
@@ -59,6 +57,7 @@ const deriveTokenTransferMessageKey = (
     programId
   );
 }
+
 export function deriveForeignContractKey(
   programId: PublicKey,
   chainId: ChainId
@@ -76,26 +75,17 @@ export function deriveSenderConfigKey(programId: PublicKeyInitData) {
 export const claimCrossChain = async (
   recipientChain: ChainId,
   recipientWallet: string,
-  recipientContractAddress: string,
   mint: PublicKey,
   marketKey: number,
-  amount: number,
-  sequence: number,
+  amount: number
 ) => {
-  let recipientAddress = new Uint8Array(32);
-  recipientAddress.set(Buffer.from(recipientWallet.slice(2), "hex"), 12);
-  let recipientContract = new Uint8Array(32);
-  recipientContract.set(
-    Buffer.from(recipientContractAddress.slice(2), "hex"),
-    12
-  );
+  let recipientAddress = new Uint8Array(20);
+  recipientAddress.set(Buffer.from(recipientWallet.slice(2), "hex"));
   const tracker = await solanaWormhole.getProgramSequenceTracker(
     connection,
     TOKEN_BRIDGE_PID,
     CORE_BRIDGE_PID
   );
-
-  console.log("Sequence: ", tracker.sequence);
 
   const message = deriveTokenTransferMessageKey(
     program.programId,
@@ -103,25 +93,6 @@ export const claimCrossChain = async (
   );
 
   const fromTokenAccount = await getOrCreateAssociatedTokenAccount(connection, payer, mint, payer.publicKey);
-  // let wsolBalance = await connection.getBalance(fromTokenAccount.address, 'confirmed');
-  // if(wsolBalance >= amount) {
-  //   console.log("Backend will wrap sol to transfer cross chain");
-  //   const wrapTx = new Transaction()
-  //     .add(
-  //       SystemProgram.transfer({
-  //           fromPubkey: payer.publicKey,
-  //           toPubkey: fromTokenAccount.address,
-  //           lamports: amount
-  //         }),
-  //         createSyncNativeInstruction(
-  //           fromTokenAccount.address
-  //       )
-  //     )
-
-  //   const wrapSig = await sendAndConfirmTransaction(connection, wrapTx, [payer]);
-  //   console.log("wrapTx signature: ", wrapSig);
-  // }
-
   const tokenBridgeAccounts = getTransferNativeWithPayloadCpiAccounts(
     program.programId,
     TOKEN_BRIDGE_PID,
@@ -150,7 +121,7 @@ export const claimCrossChain = async (
       foreignEmitter: foreignEmitterPDA(recipientChain),
       betAccount: bettingCrossChainPDA(
         recipientChain,
-        new BN(sequence.toString())
+        recipientAddress
       ),
       vaultBetTokenAccount: (await getOrCreateAssociatedTokenAccount(connection, payer, mint, marketAccount, true)).address,
       vaultRewardTokenAccount: (await getOrCreateAssociatedTokenAccount(connection, payer, mint, configAccount, true)).address,

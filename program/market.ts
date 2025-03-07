@@ -472,7 +472,43 @@ export type ForecastMarket = {
         },
         {
           "name": "betCrossChainAccount",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  116,
+                  116,
+                  105,
+                  110,
+                  103,
+                  95,
+                  99,
+                  114,
+                  111,
+                  115,
+                  115,
+                  95,
+                  99,
+                  104,
+                  97,
+                  105,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "posted"
+              },
+              {
+                "kind": "arg",
+                "path": "voterAddress"
+              }
+            ]
+          }
         },
         {
           "name": "foreignEmitter",
@@ -481,10 +517,6 @@ export type ForecastMarket = {
             "agree with the one we have registered for this message's `emitter_chain`",
             "(chain ID). Read-only."
           ]
-        },
-        {
-          "name": "received",
-          "writable": true
         },
         {
           "name": "systemProgram",
@@ -498,6 +530,15 @@ export type ForecastMarket = {
             "array": [
               "u8",
               32
+            ]
+          }
+        },
+        {
+          "name": "voter",
+          "type": {
+            "array": [
+              "u8",
+              20
             ]
           }
         }
@@ -570,7 +611,24 @@ export type ForecastMarket = {
             "instruction is invoked to temporarily take custody of the payer's",
             "tokens. When the tokens are finally bridged out, the token account",
             "will have zero balance and can be closed."
-          ]
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  109,
+                  112
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "betMint"
+              }
+            ]
+          }
         },
         {
           "name": "marketAccount",
@@ -1682,19 +1740,6 @@ export type ForecastMarket = {
       ]
     },
     {
-      "name": "received",
-      "discriminator": [
-        227,
-        186,
-        72,
-        102,
-        0,
-        233,
-        222,
-        41
-      ]
-    },
-    {
       "name": "senderConfig",
       "discriminator": [
         0,
@@ -2537,36 +2582,6 @@ export type ForecastMarket = {
               "[FeeCollector](wormhole_anchor_sdk::wormhole::FeeCollector) address."
             ],
             "type": "pubkey"
-          }
-        ]
-      }
-    },
-    {
-      "name": "received",
-      "docs": [
-        "Received account."
-      ],
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "batchId",
-            "docs": [
-              "AKA nonce. Should always be zero in this example, but we save it anyway."
-            ],
-            "type": "u32"
-          },
-          {
-            "name": "wormholeMessageHash",
-            "docs": [
-              "Keccak256 hash of verified Wormhole message."
-            ],
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
           }
         ]
       }

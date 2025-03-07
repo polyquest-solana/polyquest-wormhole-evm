@@ -21,17 +21,15 @@ const sendMessageToSolana = async (contract: WormholeBridge, marketKey: number, 
         value: fee
       }
     );
-    const receipt = await tx.wait();
+    await tx.wait();
     console.log("User's evm tx: ", tx);
-    const sequence = Buffer.from(receipt!.logs[1].data.slice(2, 66), 'hex');
-    return Number(sequence.readBigInt64BE(24));
 }
 
 
 const main = async (contract: WormholeBridge, sendChain: ChainId, bettingToken: string, amount: number, marketKey: number, answerKey: number) => {
-    const seq = await sendMessageToSolana(contract, marketKey, answerKey, bettingToken, amount);
+    await sendMessageToSolana(contract, marketKey, answerKey, bettingToken, amount);
 
-    await betCrossChain(sendChain, contract.address, marketKey, seq);
+    await betCrossChain(sendChain, process.env.PUBLIC_KEY!, contract.address, marketKey);
 }
 
 task("bet", "Test betting cross-chain")
