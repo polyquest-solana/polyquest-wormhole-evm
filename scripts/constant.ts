@@ -1,4 +1,4 @@
-import { CHAINS, WSOL_ADDRESS } from "@certusone/wormhole-sdk";
+import { CHAINS } from "@certusone/wormhole-sdk";
 
 export const listAddr = {
   [84532]: {
