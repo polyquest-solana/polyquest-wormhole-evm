@@ -19,7 +19,7 @@ const forecastMarketProgram = new Program(IDL as ForecastMarket, {
 
 const payer = Keypair.fromSecretKey(Uint8Array.from(secretKey));
 
-export const betCrossChain = async (chainId: number, userAddr: string, emitterAddr: string, marketKey: number) => {
+export const betCrossChain = async (chainId: number, userAddr: string, emitterAddr: string, marketKey: number, answerKey: number) => {
     const signedVaaUrl = `https://api.testnet.wormscan.io/api/v1/vaas/${chainId}/${emitterAddr}`;
     const response = await fetch(signedVaaUrl);
     if (!response.ok) {
@@ -53,7 +53,7 @@ export const betCrossChain = async (chainId: number, userAddr: string, emitterAd
     let recipientAddress = new Uint8Array(20);
     recipientAddress.set(Buffer.from(userAddr.slice(2), "hex"));
     const tx = await forecastMarketProgram.methods
-    .betCrossChain([...parsedVaa.hash], [...recipientAddress])
+    .betCrossChain([...parsedVaa.hash], [...recipientAddress], new BN(answerKey))
       .accountsPartial({
         polyquestOwner: payer.publicKey,
         configAccount: configPDA(),

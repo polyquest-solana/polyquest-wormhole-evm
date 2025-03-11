@@ -29,7 +29,7 @@ const sendMessageToSolana = async (contract: WormholeBridge, marketKey: number, 
 const main = async (contract: WormholeBridge, sendChain: ChainId, bettingToken: string, amount: number, marketKey: number, answerKey: number) => {
     await sendMessageToSolana(contract, marketKey, answerKey, bettingToken, amount);
 
-    await betCrossChain(sendChain, process.env.PUBLIC_KEY!, contract.address, marketKey);
+    await betCrossChain(sendChain, process.env.PUBLIC_KEY!, contract.address, marketKey, answerKey);
 }
 
 task("bet", "Test betting cross-chain")

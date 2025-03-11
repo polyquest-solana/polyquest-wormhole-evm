@@ -504,6 +504,15 @@ export type ForecastMarket = {
                 "path": "posted"
               },
               {
+                "kind": "account",
+                "path": "market_account.market_key",
+                "account": "marketAccount"
+              },
+              {
+                "kind": "arg",
+                "path": "answerKey"
+              },
+              {
                 "kind": "arg",
                 "path": "voterAddress"
               }
@@ -541,6 +550,10 @@ export type ForecastMarket = {
               20
             ]
           }
+        },
+        {
+          "name": "answerKey",
+          "type": "u64"
         }
       ]
     },
@@ -1986,66 +1999,71 @@ export type ForecastMarket = {
     },
     {
       "code": 6017,
+      "name": "invalidBetAccount",
+      "msg": "Market/ClaimToken: Invalid betting account"
+    },
+    {
+      "code": 6018,
       "name": "overflow",
       "msg": "Operation Error: Overflow"
     },
     {
-      "code": 6018,
+      "code": 6019,
       "name": "invalidRewardMint",
       "msg": "Invalid reward mint"
     },
     {
-      "code": 6019,
+      "code": 6020,
       "name": "invalidForeignEmitter",
       "msg": "Invalid foreign emitter"
     },
     {
-      "code": 6020,
+      "code": 6021,
       "name": "invalidMessage",
       "msg": "Invalid message"
     },
     {
-      "code": 6021,
+      "code": 6022,
       "name": "invalidRecipient",
       "msg": "Invalid recipient"
     },
     {
-      "code": 6022,
+      "code": 6023,
       "name": "invalidRelayerFee",
       "msg": "Invalid relayer fee"
     },
     {
-      "code": 6023,
+      "code": 6024,
       "name": "invalidTokenBridgeCustodySigner",
       "msg": "Invalid token bridge custody signer"
     },
     {
-      "code": 6024,
+      "code": 6025,
       "name": "invalidTokenBridgeAuthoritySigner",
       "msg": "Invalid token bridge authority signer"
     },
     {
-      "code": 6025,
+      "code": 6026,
       "name": "invalidTokenBridgeConfig",
       "msg": "Invalid token bridge config"
     },
     {
-      "code": 6026,
+      "code": 6027,
       "name": "invalidTokenBridgeEmitter",
       "msg": "Invalid token bridge emitter"
     },
     {
-      "code": 6027,
+      "code": 6028,
       "name": "invalidTokenBridgeSequence",
       "msg": "Invalid token bridge sequence"
     },
     {
-      "code": 6028,
+      "code": 6029,
       "name": "invalidWormholeBridge",
       "msg": "Invalid token bridge wormhole bridge"
     },
     {
-      "code": 6029,
+      "code": 6030,
       "name": "invalidWormholeFeeCollector",
       "msg": "Invalid token bridge wormhole fee collector"
     }
