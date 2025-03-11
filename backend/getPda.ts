@@ -43,9 +43,9 @@ export const bettingCrossChainPDA = (chainId: number, userAddr: Uint8Array, mark
       [
         Buffer.from("betting_cross_chain"),
         new BN(chainId).toArrayLike(Buffer, "le", 2),
-        userAddr,
         new BN(marketKey).toArrayLike(Buffer, "le", 8),
         new BN(answerKey).toArrayLike(Buffer, "le", 8),
+        userAddr,
       ],
       forecastMarketProgram.programId
     )[0];
