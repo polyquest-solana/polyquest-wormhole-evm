@@ -63,7 +63,9 @@ export const betCrossChain = async (chainId: number, userAddr: string, emitterAd
         posted: derivePostedVaaKey(CORE_BRIDGE_PID, parsedVaa.hash),
         betCrossChainAccount: bettingCrossChainPDA(
           parsedVaa.emitterChain,
-          recipientAddress
+          recipientAddress,
+          marketKey,
+          answerKey
         ),
         foreignEmitter: foreignEmitterPDA(parsedVaa.emitterChain),
       })

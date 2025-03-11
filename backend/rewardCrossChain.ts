@@ -77,6 +77,7 @@ export const claimCrossChain = async (
   recipientWallet: string,
   mint: PublicKey,
   marketKey: number,
+  answerKey: number,
   amount: number
 ) => {
   let recipientAddress = new Uint8Array(20);
@@ -121,7 +122,9 @@ export const claimCrossChain = async (
       foreignEmitter: foreignEmitterPDA(recipientChain),
       betAccount: bettingCrossChainPDA(
         recipientChain,
-        recipientAddress
+        recipientAddress,
+        marketKey,
+        answerKey
       ),
       vaultBetTokenAccount: (await getOrCreateAssociatedTokenAccount(connection, payer, mint, marketAccount, true)).address,
       vaultRewardTokenAccount: (await getOrCreateAssociatedTokenAccount(connection, payer, mint, configAccount, true)).address,

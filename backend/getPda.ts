@@ -38,12 +38,14 @@ export const foreignEmitterPDA = (chainId: number) => {
     )[0];
 }
 
-export const bettingCrossChainPDA = (chainId: number, userAddr: Uint8Array) => {
+export const bettingCrossChainPDA = (chainId: number, userAddr: Uint8Array, marketKey: number, answerKey: number) => {
     return PublicKey.findProgramAddressSync(
       [
         Buffer.from("betting_cross_chain"),
         new BN(chainId).toArrayLike(Buffer, "le", 2),
         userAddr,
+        new BN(marketKey).toArrayLike(Buffer, "le", 8),
+        new BN(answerKey).toArrayLike(Buffer, "le", 8),
       ],
       forecastMarketProgram.programId
     )[0];
