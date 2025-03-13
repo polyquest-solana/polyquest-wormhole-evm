@@ -18,6 +18,8 @@ const receiveRewardFromSolana = async (
   const chain = wh.getChain('Solana');
   let [msgId] = await chain.parseTransaction(sig);
   let vaaBytes = await wh.getVaaBytes(msgId, 2592000);
+  // let vaa = await wh.getVaa(msgId, "TokenBridge:TransferWithPayload", 60000);
+  // console.log(await contract.decodePayload(vaa?.payload.payload));
   console.log("Users call evm contract to redeem reward");
   let tx = await contract.redeemTransferWithPayload(vaaBytes!, { gasLimit: 1e6 });
   await tx.wait();
@@ -47,6 +49,6 @@ task("reward", "Test receiving reward cross-chain")
   console.log('Wormhole Integration address: ', recipientContractAddress);
 
   let contract = await hre.ethers.getContractAt("WormholeBridge", recipientContractAddress);
-  let totalLocked = await contract.locked(taskAgrs.token);
+  let totalLocked = BigInt(1e8);
   await main(contract, taskAgrs.chain, taskAgrs.marketKey, taskAgrs.answerKey, totalLocked);
 })

@@ -18,7 +18,6 @@ contract WormholeBridge is Policy, IWormholeReceiver {
     uint32 private NONCE;
     uint8 public constant CONSISTENCY_LEVEL = 200;
     uint256 public constant GAS_LIMIT = 1_000_000;
-    uint64 private minSequence = 0;
     /**
      * Message timeout in seconds: Time out needs to account for:
      * - Finality time on source chain
@@ -36,7 +35,6 @@ contract WormholeBridge is Policy, IWormholeReceiver {
     IWormholeRelayer public immutable relayer;
     ICircleIntegration public circleIntegration;
 
-    mapping(address => uint256) locked;
     mapping(uint16 => bytes32) registeredSenders;
 
     struct Message {
@@ -87,7 +85,6 @@ contract WormholeBridge is Policy, IWormholeReceiver {
         uint256 messageFee = wormhole.messageFee();
         require(msg.value >= messageFee, "Insufficient funds for cross-chain delivery");
         IERC20(_bettingToken).safeTransferFrom(msg.sender, address(this), _amount);
-        locked[_bettingToken] += _amount;
 
         bytes memory messagePayload = abi.encodePacked(
             _marketId,
@@ -121,13 +118,6 @@ contract WormholeBridge is Policy, IWormholeReceiver {
         require(valid, reason);
         require(registeredSenders[vm.emitterChainId] == vm.emitterAddress, "Invalid Emitter Address!");
 
-        /**
-         * Ensure that the sequence field in the VAA is strictly monotonically increasing. This also acts as
-         * a replay protection mechanism to ensure that already executed messages don't execute again.
-         */
-        require(vm.sequence >= minSequence, "Invalid Sequence number");
-        minSequence = vm.sequence + 1;
-
         // check if the message is still valid as defined by the validity period
         // solhint-disable-next-line not-rely-on-time
         require(vm.timestamp + MESSAGE_TIME_OUT_SECONDS >= block.timestamp, "Message no longer valid");
@@ -142,8 +132,6 @@ contract WormholeBridge is Policy, IWormholeReceiver {
         require(receiverChainId == wormhole.chainId(), "Wrong chain Id");
         require(receiverAddress == bytes32(bytes20(address(this))), "Wrong address");
 
-        require(locked[bettingToken] >= amount, "Invalid amount");
-        locked[bettingToken] -= amount;
         IERC20(bettingToken).safeTransfer(voter, amount);
         emit TransferToken(bettingToken, amount);
     }
@@ -178,15 +166,15 @@ contract WormholeBridge is Policy, IWormholeReceiver {
     }
 
     function receiveWormholeMessages(
-    bytes memory payload,
-    bytes[] memory,
-    bytes32 sourceAddress,
-    uint16 sourceChain,
-    bytes32
-  ) external payable onlyRelayer isRegisteredSender(sourceChain, sourceAddress) {
-    (, bytes32 voter, , , , , , , ) = abi.decode(payload, (uint256, bytes32, uint256, uint256, uint256, uint256, uint256, bytes32, uint256));
-    emit ReceiveMessage(address(uint160(uint256(voter))), sourceChain, sourceAddress);
-  }
+        bytes memory payload,
+        bytes[] memory,
+        bytes32 sourceAddress,
+        uint16 sourceChain,
+        bytes32
+    ) external payable onlyRelayer isRegisteredSender(sourceChain, sourceAddress) {
+        (, bytes32 voter, , , , , , , ) = abi.decode(payload, (uint256, bytes32, uint256, uint256, uint256, uint256, uint256, bytes32, uint256));
+        emit ReceiveMessage(address(uint160(uint256(voter))), sourceChain, sourceAddress);
+    }
 
     function transferCrossChain(
         address _recipient, 
@@ -228,10 +216,8 @@ contract WormholeBridge is Policy, IWormholeReceiver {
             transfer.payload
         );
 
-        address recipient = address(uint160(uint256(payload.recipient)));
+        address recipient = address(bytes20(payload.recipient));
         uint256 amount = payload.amount;
-        require(locked[tokenAddress] >= amount, "Insufficient locked tokens");
-        locked[tokenAddress] -= amount;
         IERC20(tokenAddress).safeTransfer(
             recipient,
             amountTransferred + amount

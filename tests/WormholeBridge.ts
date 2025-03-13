@@ -10,7 +10,7 @@ dotenv.config();
 describe("WormholeBridge", function () {
   let contract: any;
   beforeEach(async () => {
-    let contractAddress = getAddr("WORMHOLE_INTEGRATION", 43113 as ChainId);
+    let contractAddress = getAddr("WORMHOLE_INTEGRATION", 84532 as ChainId);
     contract = await hre.ethers.getContractAt("WormholeBridge", contractAddress);
   })
 
@@ -21,7 +21,7 @@ describe("WormholeBridge", function () {
 
     let [msgId] = await chain.parseTransaction('3uEtfUGs71tPPdiLeVxMVrCTHK2HoKAFTGohmD7ehFjWNu1kpmntA2mgAy4hFNR18kiMzcMrPA9KQhbbj6C8PxUo');
     let VM = await wh.getVaa(msgId, 'TokenBridge:TransferWithPayload', 1000000);
-    const tx = await contract.registerSender(chain.config.chainId, VM!.emitterAddress.toUint8Array());
+    const tx = await contract.registerSender(chain.config.chainId, VM!.emitterAddress.toUint8Array(), { gasLimit: 1e6 });
     await tx.wait();
     console.log(tx);
   })
