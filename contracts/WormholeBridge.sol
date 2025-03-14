@@ -8,11 +8,11 @@ import "./interfaces/ITokenBridge.sol";
 import "./interfaces/IWormholeRelayer.sol";
 import "./interfaces/IWormholeReceiver.sol";
 import "./interfaces/ICircleIntegration.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract WormholeBridge is Policy, IWormholeReceiver {
-    using SafeERC20 for IERC20;
+    using SafeERC20 for IERC20Metadata;
     using BytesLib for bytes;
 
     uint32 private NONCE;
@@ -84,7 +84,7 @@ contract WormholeBridge is Policy, IWormholeReceiver {
     ) external payable returns(uint64 sequence) {
         uint256 messageFee = wormhole.messageFee();
         require(msg.value >= messageFee, "Insufficient funds for cross-chain delivery");
-        IERC20(_bettingToken).safeTransferFrom(msg.sender, address(this), _amount);
+        IERC20Metadata(_bettingToken).safeTransferFrom(msg.sender, address(this), _amount);
 
         bytes memory messagePayload = abi.encodePacked(
             _marketId,
@@ -132,7 +132,7 @@ contract WormholeBridge is Policy, IWormholeReceiver {
         require(receiverChainId == wormhole.chainId(), "Wrong chain Id");
         require(receiverAddress == bytes32(bytes20(address(this))), "Wrong address");
 
-        IERC20(bettingToken).safeTransfer(voter, amount);
+        IERC20Metadata(bettingToken).safeTransfer(voter, amount);
         emit TransferToken(bettingToken, amount);
     }
 
@@ -185,7 +185,7 @@ contract WormholeBridge is Policy, IWormholeReceiver {
     ) external payable {
         uint256 messageFee = wormhole.messageFee();
         require(msg.value >= messageFee, "Invalid msg value");
-        IERC20(_bettingToken).safeTransferFrom(msg.sender, address(this), _amount);        
+        IERC20Metadata(_bettingToken).safeTransferFrom(msg.sender, address(this), _amount);        
         tokenBridge.transferTokensWithPayload(
             _bettingToken,
             _amount,
@@ -208,7 +208,10 @@ contract WormholeBridge is Policy, IWormholeReceiver {
         tokenBridge.completeTransferWithPayload(
             encodedVM
         );
+        uint256 decimals = IERC20Metadata(tokenAddress).decimals();
         uint256 amountTransferred = transfer.amount;
+        if (decimals > 8)
+            amountTransferred *= 10 ** (decimals - 8);
 
         require(registeredSenders[vm.emitterChainId] == vm.emitterAddress, "Invalid Emitter Address!");
 
@@ -218,7 +221,7 @@ contract WormholeBridge is Policy, IWormholeReceiver {
 
         address recipient = address(bytes20(payload.recipient));
         uint256 amount = payload.amount;
-        IERC20(tokenAddress).safeTransfer(
+        IERC20Metadata(tokenAddress).safeTransfer(
             recipient,
             amountTransferred + amount
         );

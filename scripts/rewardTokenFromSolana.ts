@@ -17,24 +17,26 @@ const receiveRewardFromSolana = async (
   const wh = await wormhole('Testnet', [solana]);
   const chain = wh.getChain('Solana');
   let [msgId] = await chain.parseTransaction(sig);
-  let vaaBytes = await wh.getVaaBytes(msgId, 2592000);
-  // let vaa = await wh.getVaa(msgId, "TokenBridge:TransferWithPayload", 60000);
-  // console.log(await contract.decodePayload(vaa?.payload.payload));
-  console.log("Users call evm contract to redeem reward");
-  let tx = await contract.redeemTransferWithPayload(vaaBytes!, { gasLimit: 1e6 });
-  await tx.wait();
-  console.log('Final evm tx', tx);
+  // let vaaBytes = await wh.getVaaBytes(msgId, 2592000);
+  let vaa = await wh.getVaa(msgId, "TokenBridge:TransferWithPayload", 60000);
+  console.log('Vaa decoded', await contract.decodePayload(vaa?.payload.payload));
+  console.log('Amount transferred: ', vaa?.payload.token.amount);
+  // console.log("Users call evm contract to redeem reward");
+  // let tx = await contract.redeemTransferWithPayload(vaaBytes!, { gasLimit: 1e6 });
+  // await tx.wait();
+  // console.log('Final evm tx', tx);
 }
 
 const main = async (contract: WormholeBridge, recipientChain: ChainId, marketKey: number, answerKey: number, totalLocked: bigint) => {
-  const sig = await claimCrossChain(
-    recipientChain,
-    process.env.PUBLIC_KEY!,
-    NATIVE_MINT,
-    marketKey,
-    answerKey,
-    Number(totalLocked)
-  );
+  // const sig = await claimCrossChain(
+  //   recipientChain,
+  //   process.env.PUBLIC_KEY!,
+  //   NATIVE_MINT,
+  //   marketKey,
+  //   answerKey,
+  //   Number(totalLocked)
+  // );
+  const sig = "3ycHSvJn6sgHDyJ5EyqahFDRcBwQwLbYAwXiBFD4d8DPQJNn87BvmfYaZ7NVs1yBhku8yp5pMcPeqS3ywi2Lu6mr";
 
   await receiveRewardFromSolana(contract, sig);
 }
